@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>⚽ Alertas de Partidos</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --card: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00e676;
+    --accent2: #ff6b35;
+    --accent3: #7c4dff;
+    --text: #f0f0f5;
+    --muted: #6b6b80;
+    --danger: #ff3d3d;
+    --warning: #ffd600;
+    --success: #00e676;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,230,118,0.04) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(124,77,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 16px 100px; }
+
+  /* HEADER */
+  header {
+    padding: 24px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo { display: flex; flex-direction: column; }
+  .logo-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .notif-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .notif-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .notif-btn.granted { border-color: var(--accent); color: var(--accent); }
+  .notif-btn.denied { border-color: var(--danger); color: var(--danger); }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+
+  .status-live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .pulse {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .clock {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin: 24px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ADD MATCH FORM */
+  .add-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .add-card-header {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 16px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .form-full { margin-bottom: 10px; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  input[type="time"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  textarea { resize: none; height: 70px; font-size: 13px; line-height: 1.5; }
+
+  .scenarios-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .scenario-row {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .scenario-row input[type="number"] {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    padding: 11px 8px;
+  }
+
+  .remove-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 11px 10px;
+    font-size: 14px;
+    line-height: 1;
+    transition: all 0.2s;
+  }
+  .remove-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .add-scenario-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 9px;
+    width: 100%;
+    transition: all 0.2s;
+    margin-bottom: 14px;
+  }
+  .add-scenario-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #0a0a0f;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,230,118,0.3); }
+  .submit-btn:active { transform: translateY(0); }
+
+  /* MATCH CARDS */
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .match-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(0,230,118,0.1), 0 8px 32px rgba(0,230,118,0.08);
+  }
+
+  .match-card.past {
+    opacity: 0.45;
+  }
+
+  .match-card.firing {
+    border-color: var(--warning);
+    box-shadow: 0 0 0 1px rgba(255,214,0,0.2), 0 8px 32px rgba(255,214,0,0.15);
+    animation: fire-pulse 0.8s ease-in-out infinite;
+  }
+
+  @keyframes fire-pulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(255,214,0,0.2), 0 8px 32px rgba(255,214,0,0.15); }
+    50% { box-shadow: 0 0 0 3px rgba(255,214,0,0.4), 0 8px 48px rgba(255,214,0,0.3); }
+  }
+
+  /* Left accent bar */
+  .match-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 16px; bottom: 16px;
+    width: 3px;
+    background: var(--border);
+    border-radius: 0 2px 2px 0;
+    transition: background 0.3s;
+  }
+  .match-card.active::before { background: var(--accent); }
+  .match-card.firing::before { background: var(--warning); }
+
+  .match-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-left: 10px;
+  }
+
+  .match-teams {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    flex: 1;
+  }
+
+  .match-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .match-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .match-league {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .delete-match {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    margin-left: 8px;
+  }
+  .delete-match:hover { color: var(--danger); background: rgba(255,61,61,0.1); }
+
+  /* Scenarios list */
+  .scenarios-list { padding-left: 10px; }
+
+  .scenario-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+  }
+
+  .scenario-item:last-child { border-bottom: none; }
+
+  .scenario-min {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--accent2);
+    white-space: nowrap;
+    min-width: 52px;
+    text-align: center;
+  }
+
+  .scenario-item.fired .scenario-min {
+    background: rgba(0,230,118,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .scenario-item.next .scenario-min {
+    background: rgba(255,214,0,0.1);
+    border-color: var(--warning);
+    color: var(--warning);
+    animation: pulse-border 1.5s infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 8px rgba(255,214,0,0.4); }
+  }
+
+  .scenario-text {
+    flex: 1;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .scenario-item.fired .scenario-text {
+    color: var(--muted);
+    text-decoration: line-through;
+  }
+
+  .scenario-status {
+    font-size: 16px;
+  }
+
+  .countdown-chip {
+    background: rgba(255,214,0,0.1);
+    border: 1px solid rgba(255,214,0,0.3);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--warning);
+    white-space: nowrap;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-title { font-family: 'Bebas Neue', cursive; font-size: 22px; letter-spacing: 1px; margin-bottom: 6px; color: var(--text); }
+  .empty-sub { font-size: 13px; line-height: 1.5; }
+
+  /* NOTIFICATION TOAST */
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: calc(100% - 32px);
+    max-width: 448px;
+  }
+
+  .toast {
+    background: var(--warning);
+    color: #0a0a0f;
+    border-radius: 14px;
+    padding: 14px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(255,214,0,0.4);
+    animation: slide-in 0.3s ease;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+
+  @keyframes slide-in {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .toast-title { font-family: 'Bebas Neue', cursive; font-size: 16px; letter-spacing: 1px; margin-bottom: 2px; }
+
+  /* BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0,230,118,0.1);
+    border: 1px solid rgba(0,230,118,0.25);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge.orange {
+    background: rgba(255,107,53,0.1);
+    border-color: rgba(255,107,53,0.3);
+    color: var(--accent2);
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(10,10,15,0.95);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    padding: 12px 24px 24px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .nav-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 8px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav-btn .nav-icon { font-size: 18px; }
+  .nav-btn.active { background: rgba(0,230,118,0.08); border-color: var(--accent); color: var(--accent); }
+  .nav-btn:hover:not(.active) { border-color: var(--muted); color: var(--text); }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* CLEAR ALL */
+  .clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 6px 12px;
+    transition: all 0.2s;
+  }
+  .clear-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  .section-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 24px 0 12px;
+  }
+
+  .next-alert-banner {
+    background: linear-gradient(135deg, rgba(255,214,0,0.08), rgba(255,107,53,0.05));
+    border: 1px solid rgba(255,214,0,0.25);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .next-alert-icon { font-size: 24px; }
+  .next-alert-content { flex: 1; }
+  .next-alert-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  .next-alert-text { font-size: 14px; font-weight: 600; color: var(--warning); margin-top: 2px; }
+  .next-alert-time { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; color: var(--warning); }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="wrapper">
+  <header>
+    <div class="logo">
+      <div class="logo-title">⚽ AlertaBet</div>
+      <div class="logo-sub">Sistema de alertas live</div>
+    </div>
+    <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
+      <span id="notifIcon">🔔</span>
+      <span id="notifText">Activar</span>
+    </button>
+  </header>
+
+  <!-- VIEW: LISTA -->
+  <div class="view active" id="viewList">
+
+    <div id="nextAlertBanner" style="display:none" class="next-alert-banner">
+      <div class="next-alert-icon">⏰</div>
+      <div class="next-alert-content">
+        <div class="next-alert-label">Próxima alerta</div>
+        <div class="next-alert-text" id="nextAlertText">—</div>
+      </div>
+      <div class="next-alert-time" id="nextAlertCountdown">--:--</div>
+    </div>
+
+    <div id="matchList"></div>
+
+    <div class="empty" id="emptyState" style="display:none">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">Sin partidos cargados</div>
+      <div class="empty-sub">Tocá "Agregar" para cargar los partidos del día y sus alertas</div>
+    </div>
+  </div>
+
+  <!-- VIEW: AGREGAR -->
+  <div class="view" id="viewAdd">
+    <div class="section-title">Nuevo Partido</div>
+
+    <div class="add-card">
+      <div class="add-card-header">📋 Datos del partido</div>
+
+      <div class="form-full">
+        <label>Equipos (Local vs Visitante)</label>
+        <input type="text" id="inputTeams" placeholder="Ej: Wolves vs Arsenal" />
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>Liga / Competición</label>
+          <input type="text" id="inputLeague" placeholder="Premier League" />
+        </div>
+        <div>
+          <label>Hora de inicio</label>
+          <input type="time" id="inputTime" />
+        </div>
+      </div>
+
+      <div class="form-full">
+        <label>Notas del análisis (opcional)</label>
+        <textarea id="inputNotes" placeholder="Lambda: 2.72 | Under 2.5 Edge +15%&#10;Candidato live: esperar 0-0 al 25'"></textarea>
+      </div>
+
+      <div class="scenarios-label">
+        <span>Alertas live</span>
+        <span style="color:var(--muted);font-size:11px;font-weight:400">minuto → acción</span>
+      </div>
+
+      <div id="scenarioInputs">
+        <div class="scenario-row">
+          <div>
+            <input type="number" placeholder="min" min="1" max="95" class="scenario-min-input" />
+          </div>
+          <input type="text" placeholder="0-0 al 25 → entrar O1,5" class="scenario-text-input" />
+          <button class="remove-btn" onclick="removeScenarioInput(this)">✕</button>
+        </div>
+      </div>
+
+      <button class="add-scenario-btn" onclick="addScenarioInput()">＋ Agregar alerta</button>
+      <button class="submit-btn" onclick="addMatch()">GUARDAR PARTIDO</button>
+    </div>
+  </div>
+
+  <!-- VIEW: HISTORIAL -->
+  <div class="view" id="viewHistory">
+    <div class="section-actions">
+      <div class="section-title" style="margin:0">Historial</div>
+      <button class="clear-btn" onclick="clearPast()">Limpiar pasados</button>
+    </div>
+    <div id="historyList"></div>
+    <div class="empty" id="historyEmpty" style="display:none">
+      <div class="empty-icon">📁</div>
+      <div class="empty-title">Sin historial aún</div>
+      <div class="empty-sub">Los partidos finalizados aparecerán acá</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="navList" onclick="switchView('List')">
+    <span class="nav-icon">📋</span>
+    Hoy
+  </button>
+  <button class="nav-btn" id="navAdd" onclick="switchView('Add')">
+    <span class="nav-icon">＋</span>
+    Agregar
+  </button>
+  <button class="nav-btn" id="navHistory" onclick="switchView('History')">
+    <span class="nav-icon">📁</span>
+    Historial
+  </button>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────
+let matches = [];
+let firedAlerts = {};
+let notifPermission = 'default';
+
+// ── STORAGE (localStorage polyfill with in-memory fallback) ───────
+const store = (() => {
+  try { localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return localStorage; }
+  catch(e) { const m = {}; return { getItem: k => m[k]||null, setItem: (k,v) => m[k]=v, removeItem: k => delete m[k] }; }
+})();
+
+function saveData() {
+  try { store.setItem('alertabet_matches', JSON.stringify(matches)); store.setItem('alertabet_fired', JSON.stringify(firedAlerts)); } catch(e) {}
+}
+
+function loadData() {
+  try {
+    const m = store.getItem('alertabet_matches');
+    const f = store.getItem('alertabet_fired');
+    if (m) matches = JSON.parse(m);
+    if (f) firedAlerts = JSON.parse(f);
+  } catch(e) { matches = []; firedAlerts = {}; }
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────
+function requestNotifPermission() {
+  if (!('Notification' in window)) { showToast('Tu navegador no soporta notificaciones. Usá Chrome o Safari.', '⚠️'); return; }
+  Notification.requestPermission().then(p => {
+    notifPermission = p;
+    updateNotifBtn();
+    if (p === 'granted') showToast('¡Notificaciones activadas! Te vamos a avisar a tiempo.', '✅');
+    else showToast('Activá las notificaciones para recibir alertas automáticas.', '⚠️');
+  });
+}
+
+function updateNotifBtn() {
+  const btn = document.getElementById('notifBtn');
+  const icon = document.getElementById('notifIcon');
+  const txt = document.getElementById('notifText');
+  if (!('Notification' in window)) { icon.textContent = '🚫'; txt.textContent = 'No soportado'; return; }
+  notifPermission = Notification.permission;
+  if (notifPermission === 'granted') { icon.textContent = '🔔'; txt.textContent = 'Activado'; btn.className = 'notif-btn granted'; }
+  else if (notifPermission === 'denied') { icon.textContent = '🔕'; txt.textContent = 'Bloqueado'; btn.className = 'notif-btn denied'; }
+  else { icon.textContent = '🔔'; txt.textContent = 'Activar'; btn.className = 'notif-btn'; }
+}
+
+function sendNotification(title, body) {
+  // In-app toast always
+  showToast(body, '⏰', title);
+  // System notification if granted
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⚽</text></svg>', tag: title }); } catch(e) {}
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────
+function showToast(msg, icon = '⏰', title = '') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `${title ? `<div class="toast-title">${icon} ${title}</div>` : ''}${msg}`;
+  t.onclick = () => t.remove();
+  c.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 8000);
+}
+
+// ── VIEWS ─────────────────────────────────────────────────────────
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view' + name).classList.add('active');
+  document.getElementById('nav' + name).classList.add('active');
+  if (name === 'List') renderList();
+  if (name === 'History') renderHistory();
+}
+
+// ── SCENARIO INPUTS ───────────────────────────────────────────────
+function addScenarioInput() {
+  const c = document.getElementById('scenarioInputs');
+  const r = document.createElement('div');
+  r.className = 'scenario-row';
+  r.innerHTML = `
+    <input type="number" placeholder="min" min="1" max="95" class="scenario-min-input" />
+    <input type="text" placeholder="Ej: 0-0 → entrar U2,5" class="scenario-text-input" />
+    <button class="remove-btn" onclick="removeScenarioInput(this)">✕</button>
+  `;
+  c.appendChild(r);
+}
+
+function removeScenarioInput(btn) {
+  const rows = document.querySelectorAll('#scenarioInputs .scenario-row');
+  if (rows.length > 1) btn.closest('.scenario-row').remove();
+}
+
+// ── ADD MATCH ─────────────────────────────────────────────────────
+function addMatch() {
+  const teams = document.getElementById('inputTeams').value.trim();
+  const league = document.getElementById('inputLeague').value.trim();
+  const time = document.getElementById('inputTime').value;
+  const notes = document.getElementById('inputNotes').value.trim();
+
+  if (!teams || !time) { showToast('Completá al menos el nombre del partido y la hora.', '⚠️'); return; }
+
+  // Parse scenarios
+  const scenarios = [];
+  document.querySelectorAll('#scenarioInputs .scenario-row').forEach(row => {
+    const min = parseInt(row.querySelector('.scenario-min-input').value);
+    const txt = row.querySelector('.scenario-text-input').value.trim();
+    if (min && txt) scenarios.push({ minute: min, text: txt, fired: false });
+  });
+
+  if (scenarios.length === 0) { showToast('Agregá al menos una alerta con minuto y descripción.', '⚠️'); return; }
+
+  // Sort scenarios by minute
+  scenarios.sort((a,b) => a.minute - b.minute);
+
+  const id = Date.now().toString();
+  matches.push({ id, teams, league, time, notes, scenarios });
+  saveData();
+
+  // Reset form
+  document.getElementById('inputTeams').value = '';
+  document.getElementById('inputLeague').value = '';
+  document.getElementById('inputTime').value = '';
+  document.getElementById('inputNotes').value = '';
+  document.getElementById('scenarioInputs').innerHTML = `
+    <div class="scenario-row">
+      <input type="number" placeholder="min" min="1" max="95" class="scenario-min-input" />
+      <input type="text" placeholder="0-0 al 25 → entrar O1,5" class="scenario-text-input" />
+      <button class="remove-btn" onclick="removeScenarioInput(this)">✕</button>
+    </div>`;
+
+  showToast(`${teams} agregado con ${scenarios.length} alerta(s).`, '✅');
+  switchView('List');
+}
+
+// ── DELETE MATCH ──────────────────────────────────────────────────
+function deleteMatch(id) {
+  matches = matches.filter(m => m.id !== id);
+  delete firedAlerts[id];
+  saveData();
+  renderList();
+}
+
+function clearPast() {
+  const now = new Date();
+  matches = matches.filter(m => {
+    const end = matchEndTime(m);
+    return end > now;
+  });
+  saveData();
+  renderHistory();
+  renderList();
+}
+
+// ── TIME HELPERS ──────────────────────────────────────────────────
+function parseMatchTime(timeStr) {
+  const [h, min] = timeStr.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, min, 0, 0);
+  return d;
+}
+
+function alertTime(match, scenario) {
+  const start = parseMatchTime(match.time);
+  return new Date(start.getTime() + scenario.minute * 60000);
+}
+
+function matchEndTime(match) {
+  const start = parseMatchTime(match.time);
+  return new Date(start.getTime() + 110 * 60000); // ~110 min
+}
+
+function formatCountdown(ms) {
+  if (ms <= 0) return '00:00';
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m`;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ── MATCH STATUS ─────────────────────────────────────────────────
+function getMatchStatus(match) {
+  const now = new Date();
+  const start = parseMatchTime(match.time);
+  const end = matchEndTime(match);
+  if (now < start) return 'upcoming';
+  if (now > end) return 'past';
+  return 'active';
+}
+
+// ── RENDER LIST ───────────────────────────────────────────────────
+function renderList() {
+  const now = new Date();
+  const container = document.getElementById('matchList');
+  const empty = document.getElementById('emptyState');
+
+  // Sort: active first, then upcoming, then past
+  const sorted = [...matches].sort((a,b) => {
+    const sa = getMatchStatus(a), sb = getMatchStatus(b);
+    const order = { active:0, upcoming:1, past:2 };
+    if (order[sa] !== order[sb]) return order[sa] - order[sb];
+    return parseMatchTime(a.time) - parseMatchTime(b.time);
+  });
+
+  const current = sorted.filter(m => getMatchStatus(m) !== 'past');
+
+  if (current.length === 0) { container.innerHTML = ''; empty.style.display = 'block'; }
+  else { empty.style.display = 'none'; }
+
+  // Next alert banner
+  let nextAlert = null;
+  let nextMs = Infinity;
+  matches.forEach(m => {
+    if (getMatchStatus(m) === 'past') return;
+    m.scenarios.forEach((s, i) => {
+      const t = alertTime(m, s);
+      const ms = t - now;
+      if (ms > 0 && ms < nextMs && !isFired(m.id, i)) {
+        nextMs = ms;
+        nextAlert = { match: m, scenario: s, ms };
+      }
+    });
+  });
+
+  const banner = document.getElementById('nextAlertBanner');
+  if (nextAlert) {
+    banner.style.display = 'flex';
+    document.getElementById('nextAlertText').textContent = `${nextAlert.match.teams} — ${nextAlert.scenario.text}`;
+  } else { banner.style.display = 'none'; }
+
+  // Render cards
+  container.innerHTML = current.map(match => renderMatchCard(match, now)).join('');
+}
+
+function isFired(matchId, scenarioIdx) {
+  return firedAlerts[matchId] && firedAlerts[matchId][scenarioIdx];
+}
+
+function renderMatchCard(match, now) {
+  const status = getMatchStatus(match);
+  const start = parseMatchTime(match.time);
+
+  let cardClass = 'match-card';
+  if (status === 'active') cardClass += ' active';
+  if (status === 'past') cardClass += ' past';
+
+  // Check if any alert is imminent (< 90 seconds)
+  let firingAlert = null;
+  match.scenarios.forEach((s, i) => {
+    const t = alertTime(match, s);
+    const ms = t - now;
+    if (ms >= -30000 && ms < 90000 && !isFired(match.id, i)) firingAlert = i;
+  });
+  if (firingAlert !== null) cardClass += ' firing';
+
+  const scenariosHTML = match.scenarios.map((s, i) => {
+    const t = alertTime(match, s);
+    const ms = t - now;
+    const fired = isFired(match.id, i);
+
+    // Determine next unfired alert
+    const isNext = !fired && match.scenarios.slice(0, i).every((_, j) => isFired(match.id, j) || alertTime(match, match.scenarios[j]) < now);
+
+    let itemClass = 'scenario-item';
+    if (fired) itemClass += ' fired';
+    else if (isNext && ms > 0) itemClass += ' next';
+
+    const countdownHTML = (!fired && ms > 0 && ms < 3600000)
+      ? `<span class="countdown-chip">${formatCountdown(ms)}</span>`
+      : '';
+
+    const statusIcon = fired ? '✅' : (ms < 0 && !fired ? '⚠️' : '⏰');
+
+    return `<div class="${itemClass}">
+      <div class="scenario-min">min ${s.minute}</div>
+      <div class="scenario-text">${s.text}</div>
+      ${countdownHTML}
+      <div class="scenario-status">${statusIcon}</div>
+    </div>`;
+  }).join('');
+
+  const statusBadge = status === 'active'
+    ? `<span class="badge">EN JUEGO</span>`
+    : status === 'upcoming'
+      ? `<span class="badge orange">Empieza ${formatTime(start)}</span>`
+      : '';
+
+  const notesHTML = match.notes
+    ? `<div style="margin-top:10px;padding:10px 12px;background:var(--surface);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.5;padding-left:22px">${match.notes.replace(/\n/g,'<br>')}</div>`
+    : '';
+
+  return `<div class="${cardClass}" id="card-${match.id}">
+    <div class="match-header">
+      <div>
+        <div class="match-teams">${match.teams}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span class="match-league">${match.league}</span>
+          ${statusBadge}
+        </div>
+      </div>
+      <div class="match-meta">
+        <div class="match-time">${match.time}</div>
+        <button class="delete-match" onclick="deleteMatch('${match.id}')">✕</button>
+      </div>
+    </div>
+    <div class="scenarios-list">
+      ${scenariosHTML}
+    </div>
+    ${notesHTML}
+  </div>`;
+}
+
+// ── RENDER HISTORY ────────────────────────────────────────────────
+function renderHistory() {
+  const now = new Date();
+  const past = matches.filter(m => getMatchStatus(m) === 'past');
+  const container = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+
+  if (past.length === 0) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  container.innerHTML = past.map(m => renderMatchCard(m, now)).join('');
+}
+
+// ── TICKER (checks every 5 seconds) ──────────────────────────────
+function tick() {
+  const now = new Date();
+
+  // Update countdown
+  const countdownEl = document.getElementById('nextAlertCountdown');
+  let nextMs = Infinity;
+  matches.forEach(m => {
+    if (getMatchStatus(m) === 'past') return;
+    m.scenarios.forEach((s, i) => {
+      const t = alertTime(m, s);
+      const ms = t - now;
+      if (ms > 0 && ms < nextMs && !isFired(m.id, i)) nextMs = ms;
+    });
+  });
+  if (countdownEl && nextMs < Infinity) countdownEl.textContent = formatCountdown(nextMs);
+
+  // Check for alerts to fire
+  matches.forEach(m => {
+    m.scenarios.forEach((s, i) => {
+      const t = alertTime(m, s);
+      const ms = t - now;
+      // Fire between -10s and +30s of alert time
+      if (ms >= -10000 && ms < 30000 && !isFired(m.id, i)) {
+        // Mark as fired
+        if (!firedAlerts[m.id]) firedAlerts[m.id] = {};
+        firedAlerts[m.id][i] = true;
+        saveData();
+        // Send notification
+        sendNotification(
+          `⏰ ${m.teams}`,
+          `Minuto ${s.minute}: ${s.text}`
+        );
+      }
+    });
+  });
+
+  // Re-render if on list view
+  if (document.getElementById('viewList').classList.contains('active')) {
+    renderList();
+  }
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.querySelectorAll('.clock').forEach(el => {
+    el.textContent = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  });
+}
+
+// Status bar clock
+const header = document.querySelector('header');
+const statusBar = document.createElement('div');
+statusBar.className = 'status-bar';
+statusBar.innerHTML = `<div class="status-live"><div class="pulse"></div>Sistema activo</div><div class="clock">--:--:--</div>`;
+header.insertAdjacentElement('afterend', statusBar);
+
+// ── INIT ──────────────────────────────────────────────────────────
+loadData();
+updateNotifBtn();
+renderList();
+setInterval(tick, 5000);
+setInterval(updateClock, 1000);
+updateClock();
+tick();
+</script>
+</body>
+</html>
